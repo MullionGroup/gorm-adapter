@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql
-        env:
-          MYSQL_ALLOW_EMPTY_PASSWORD: yes
-          MYSQL_DATABASE: casbin
-        ports:
-          - 3306:3306
+#      mysql:
+#        image: mysql
+#        env:
+#          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+#          MYSQL_DATABASE: casbin
+#        ports:
+#          - 3306:3306
       postgres:
         image: postgres
         env:

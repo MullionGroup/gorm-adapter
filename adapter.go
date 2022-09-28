@@ -22,13 +22,11 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
+
 	"github.com/glebarez/sqlite"
-	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlserver"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/plugin/dbresolver"
@@ -95,7 +93,7 @@ func finalizer(a *Adapter) {
 	}
 }
 
-//Select conn according to table name（use map store name-index）
+// Select conn according to table name（use map store name-index）
 type specificPolicy int
 
 func (p *specificPolicy) Resolve(connPools []gorm.ConnPool) gorm.ConnPool {
@@ -115,8 +113,10 @@ func (dbPool *DbPool) switchDb(dbName string) *gorm.DB {
 
 // NewAdapter is the constructor for Adapter.
 // Params : databaseName,tableName,dbSpecified
-//			databaseName,{tableName/dbSpecified}
-//			{database/dbSpecified}
+//
+//	databaseName,{tableName/dbSpecified}
+//	{database/dbSpecified}
+//
 // databaseName and tableName are user defined.
 // Their default value are "casbin" and "casbin_rule"
 //
@@ -285,14 +285,14 @@ func openDBConnection(driverName, dataSourceName string) (*gorm.DB, error) {
 	var db *gorm.DB
 	if driverName == "postgres" {
 		db, err = gorm.Open(postgres.Open(dataSourceName), &gorm.Config{})
-	} else if driverName == "mysql" {
-		db, err = gorm.Open(mysql.Open(dataSourceName), &gorm.Config{})
-	} else if driverName == "sqlserver" {
-		db, err = gorm.Open(sqlserver.Open(dataSourceName), &gorm.Config{})
+		//} else if driverName == "mysql" {
+		//	db, err = gorm.Open(mysql.Open(dataSourceName), &gorm.Config{})
+		//} else if driverName == "sqlserver" {
+		//	db, err = gorm.Open(sqlserver.Open(dataSourceName), &gorm.Config{})
 	} else if driverName == "sqlite3" {
 		db, err = gorm.Open(sqlite.Open(dataSourceName), &gorm.Config{})
 	} else {
-		return nil, errors.New("Database dialect '" + driverName + "' is not supported. Supported databases are postgres, mysql and sqlserver")
+		return nil, errors.New("Database dialect '" + driverName + "' is not supported. Supported databases are postgres and sqlite3")
 	}
 	if err != nil {
 		return nil, err

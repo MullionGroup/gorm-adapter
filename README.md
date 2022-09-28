@@ -29,7 +29,7 @@ Based on [Officially Supported Databases](https://v1.gorm.io/docs/connecting_to_
 
 ## Installation
 
-    go get github.com/casbin/gorm-adapter/v3
+    go get github.com/MullionGroup/gorm-adapter
 
 ## Simple Example
 
@@ -38,16 +38,16 @@ package main
 
 import (
 	"github.com/casbin/casbin/v2"
-	gormadapter "github.com/casbin/gorm-adapter/v3"
-	_ "github.com/go-sql-driver/mysql"
+	gormadapter "github.com/MullionGroup/gorm-adapter"
+	_ "github.com/go-sql-driver/postgres"
 )
 
 func main() {
 	// Initialize a Gorm adapter and use it in a Casbin enforcer:
-	// The adapter will use the MySQL database named "casbin".
+	// The adapter will use the Postgres database named "casbin".
 	// If it doesn't exist, the adapter will create it automatically.
 	// You can also use an already existing gorm instance with gormadapter.NewAdapterByDB(gormInstance)
-	a, _ := gormadapter.NewAdapter("mysql", "mysql_username:mysql_password@tcp(127.0.0.1:3306)/") // Your driver and data source.
+	a, _ := gormadapter.NewAdapter("postgres", "postgres_username:mysql_password@tcp(127.0.0.1:3306)/") // Your driver and data source.
 	e, _ := casbin.NewEnforcer("examples/rbac_model.conf", a)
 	
 	// Or you can use an existing DB "abc" like this:
@@ -72,7 +72,7 @@ func main() {
 ## Turn off AutoMigrate
 New an adapter will use ``AutoMigrate`` by default for create table, if you want to turn it off, please use API ``TurnOffAutoMigrate(db *gorm.DB) *gorm.DB``. See example: 
 ```go
-db, err := gorm.Open(mysql.Open("root:@tcp(127.0.0.1:3306)/casbin"), &gorm.Config{})
+db, err := gorm.Open(postgres.Open("root:@tcp(127.0.0.1:3306)/casbin"), &gorm.Config{})
 TurnOffAutoMigrate(db)
 // a,_ := NewAdapterByDB(...)
 // a,_ := NewAdapterByDBUseTableName(...)
@@ -86,7 +86,7 @@ package main
 
 import (
 	"github.com/casbin/casbin/v2"
-	gormadapter "github.com/casbin/gorm-adapter/v3"
+	gormadapter "github.com/MullionGroup/gorm-adapter"
 	"gorm.io/gorm"
 )
 
