@@ -22,6 +22,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
 
