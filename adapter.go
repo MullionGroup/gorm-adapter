@@ -22,15 +22,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
 
-	"github.com/glebarez/sqlite"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"gorm.io/plugin/dbresolver"
 )
 
 const (
@@ -249,6 +244,19 @@ func NewFilteredAdapter(driverName string, dataSourceName string, params ...inte
 	return adapter, err
 }
 
+// NewFilteredAdapterByDB is the constructor for FilteredAdapter.
+// Casbin will not automatically call LoadPolicy() for a filtered adapter.
+func NewFilteredAdapterByDB(db *gorm.DB, prefix string, tableName string) (*Adapter, error) {
+	adapter := &Adapter{
+		tablePrefix: prefix,
+		tableName:   tableName,
+		isFiltered:  true,
+	}
+	adapter.db = db.Scopes(adapter.casbinRuleTable()).Session(&gorm.Session{Context: db.Statement.Context})
+
+	return adapter, nil
+}
+
 // NewAdapterByDB creates gorm-adapter by an existing Gorm instance
 func NewAdapterByDB(db *gorm.DB) (*Adapter, error) {
 	return NewAdapterByDBUseTableName(db, "", defaultTableName)
@@ -314,7 +322,7 @@ func (a *Adapter) createDatabase() error {
 				return nil
 			}
 		}
-	} else if a.driverName != "sqlite3" {
+	} else if a.driverName != "sqlite3" && a.driverName != "sqlserver" {
 		err = db.Exec("CREATE DATABASE IF NOT EXISTS " + a.databaseName).Error
 	}
 	if err != nil {
@@ -425,7 +433,7 @@ func (a *Adapter) truncateTable() error {
 	return a.db.Exec(fmt.Sprintf("truncate table %s", a.getFullTableName())).Error
 }
 
-func loadPolicyLine(line CasbinRule, model model.Model) {
+func loadPolicyLine(line CasbinRule, model model.Model) error {
 	var p = []string{line.Ptype,
 		line.V0, line.V1, line.V2,
 		line.V3, line.V4, line.V5}
@@ -436,8 +444,11 @@ func loadPolicyLine(line CasbinRule, model model.Model) {
 	}
 	index += 1
 	p = p[:index]
-
-	persist.LoadPolicyArray(p, model)
+	err := persist.LoadPolicyArray(p, model)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // LoadPolicy loads policy from database.
@@ -446,9 +457,15 @@ func (a *Adapter) LoadPolicy(model model.Model) error {
 	if err := a.db.Order("ID").Find(&lines).Error; err != nil {
 		return err
 	}
-
+	err := a.Preview(&lines, model)
+	if err != nil {
+		return err
+	}
 	for _, line := range lines {
-		loadPolicyLine(line, model)
+		err := loadPolicyLine(line, model)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -482,7 +499,10 @@ func (a *Adapter) LoadFilteredPolicy(model model.Model, filter interface{}) erro
 		}
 
 		for _, line := range lines {
-			loadPolicyLine(line, model)
+			err := loadPolicyLine(line, model)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	a.isFiltered = true
@@ -822,17 +842,16 @@ func (a *Adapter) UpdateFilteredPolicies(sec string, ptype string, newPolicies [
 	}
 
 	tx := a.db.Begin()
-
+	str, args := line.queryString()
+	if err := tx.Where(str, args...).Find(&oldP).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if err := tx.Where(str, args...).Delete([]CasbinRule{}).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
 	for i := range newP {
-		str, args := line.queryString()
-		if err := tx.Where(str, args...).Find(&oldP).Error; err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-		if err := tx.Where(str, args...).Delete([]CasbinRule{}).Error; err != nil {
-			tx.Rollback()
-			return nil, err
-		}
 		if err := tx.Create(&newP[i]).Error; err != nil {
 			tx.Rollback()
 			return nil, err
@@ -846,6 +865,34 @@ func (a *Adapter) UpdateFilteredPolicies(sec string, ptype string, newPolicies [
 		oldPolicies = append(oldPolicies, oldPolicy)
 	}
 	return oldPolicies, tx.Commit().Error
+}
+
+// Preview Pre-checking to avoid causing partial load success and partial failure deep
+func (a *Adapter) Preview(rules *[]CasbinRule, model model.Model) error {
+	j := 0
+	for i, rule := range *rules {
+		r := []string{rule.Ptype,
+			rule.V0, rule.V1, rule.V2,
+			rule.V3, rule.V4, rule.V5}
+		index := len(r) - 1
+		for r[index] == "" {
+			index--
+		}
+		index += 1
+		p := r[:index]
+		key := p[0]
+		sec := key[:1]
+		ok, err := model.HasPolicyEx(sec, key, p[1:])
+		if err != nil {
+			return err
+		}
+		if ok {
+			(*rules)[j], (*rules)[i] = rule, (*rules)[j]
+			j++
+		}
+	}
+	(*rules) = (*rules)[j:]
+	return nil
 }
 
 func (c *CasbinRule) queryString() (interface{}, []interface{}) {

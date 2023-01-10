@@ -449,6 +449,18 @@ func TestAdapterWithoutAutoMigrate(t *testing.T) {
 
 	a = initAdapterWithoutAutoMigrate(t, db)
 	testFilteredPolicy(t, a)
+
+	//db, err = gorm.Open(sqlserver.Open("sqlserver://sa:SqlServer123@localhost:1433?database=master"), &gorm.Config{})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//a = initAdapterWithoutAutoMigrate(t, db)
+	//testAutoSave(t, a)
+	//testSaveLoad(t, a)
+	//
+	//a = initAdapterWithoutAutoMigrate(t, db)
+	//testFilteredPolicy(t, a)
 }
 
 //func TestAdapterWithMulDb(t *testing.T) {
@@ -517,6 +529,10 @@ func TestAdapters(t *testing.T) {
 	testAutoSave(t, a)
 	testSaveLoad(t, a)
 
+	//a = initAdapter(t, "sqlserver", "sqlserver://sa:SqlServer123@localhost:1433", "master", "casbin_rule")
+	//testAutoSave(t, a)
+	//testSaveLoad(t, a)
+	//
 	//db, err := gorm.Open(mysql.Open("root:@tcp(127.0.0.1:3306)/casbin"), &gorm.Config{})
 	//if err != nil {
 	//	panic(err)
@@ -550,6 +566,17 @@ func TestAdapters(t *testing.T) {
 	a = initAdapterWithGormInstance(t, db)
 	testFilteredPolicy(t, a)
 
+	//db, err = gorm.Open(sqlserver.Open("sqlserver://sa:SqlServer123@localhost:1433?database=master"), &gorm.Config{})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//a = initAdapterWithGormInstance(t, db)
+	//testAutoSave(t, a)
+	//testSaveLoad(t, a)
+	//
+	//a = initAdapterWithGormInstance(t, db)
+	//testFilteredPolicy(t, a)
+	//
 	//db, err = gorm.Open(mysql.Open("root:@tcp(127.0.0.1:3306)/casbin"), &gorm.Config{})
 	//if err != nil {
 	//	panic(err)
@@ -590,6 +617,17 @@ func TestAdapters(t *testing.T) {
 	a = initAdapterWithGormInstanceByName(t, db, "casbin_rule")
 	testFilteredPolicy(t, a)
 
+	//db, err = gorm.Open(sqlserver.Open("sqlserver://sa:SqlServer123@localhost:1433?database=master"), &gorm.Config{})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//a = initAdapterWithGormInstanceByName(t, db, "casbin_rule")
+	//testAutoSave(t, a)
+	//testSaveLoad(t, a)
+	//
+	//a = initAdapterWithGormInstanceByName(t, db, "casbin_rule")
+	//testFilteredPolicy(t, a)
+	//
 	//a = initAdapter(t, "mysql", "root:@tcp(127.0.0.1:3306)/", "casbin", "casbin_rule")
 	//testUpdatePolicy(t, a)
 	//testUpdatePolicies(t, a)
@@ -615,6 +653,17 @@ func TestAdapters(t *testing.T) {
 	a = initAdapter(t, "sqlite3", "casbin.db")
 	testUpdatePolicy(t, a)
 	testUpdatePolicies(t, a)
+
+	//a = initAdapter(t, "sqlserver", "sqlserver://sa:SqlServer123@localhost:1433", "master", "casbin_rule")
+	//testUpdatePolicy(t, a)
+	//testUpdatePolicies(t, a)
+	//testUpdateFilteredPolicies(t, a)
+	//
+	//a = initAdapter(t, "sqlserver", "sqlserver://sa:SqlServer123@localhost:1433", "master", "casbin_rule")
+	//a.AddLogger(logger.New(log.New(os.Stdout, "\r\n", log.LstdFlags), logger.Config{}))
+	//testUpdatePolicy(t, a)
+	//testUpdatePolicies(t, a)
+	//testUpdateFilteredPolicies(t, a)
 }
 
 //func TestAddPolicies(t *testing.T) {
